@@ -22,8 +22,8 @@ public class Main {
 	public static void main(String args[]) {
 		
 		double fieldYWidth = 27.0;	// y-axis
-        double fieldXLength = 32.0;	// x-axis
-
+        double fieldXLength = 32.0;	// x-axis      
+        
         // exchange is 3ft by 4ft (x by y) and bottom edge is 1ft above horizontal midline
         double exchangeZoneBottomY = (fieldYWidth / 2.0) + 1.0,
         	   exchangeZoneTopY = exchangeZoneBottomY + 4.0,
@@ -99,8 +99,18 @@ public class Main {
         	{scalePlateRightX, scaleBottomPlateOuterY}, {scalePlateLeftX, scaleBottomPlateOuterY}
         };
         
+        double trackWidth = 22.0 / 12.0; //29.872 / 12.0; //(25.75/12.0);
         
+        // left starting position, by portal
+        double leftOriginX = 33.0 / 12.0, leftOriginY =  fieldYWidth - ((29.69 + 11) / 12.0);
         
+        // center starting position, right side of exchange zone
+        double centerOriginX = 33.0 / 12.0, centerOriginY = exchangeZoneBottomY - (trackWidth / 2.0);
+        
+        // right starting position, by portal
+        double rightOriginX = 33.0 / 12.0, rightOriginY = (29.69 + 11) / 12.0;
+        double robotOriginX = leftOriginX, robotOriginY =  leftOriginY; //23.0 - 0.0875 - (52.0 / 12.0);
+       
 		TrajectoryGenerator.Config cheesyConfig = new TrajectoryGenerator.Config();
 		cheesyConfig.dt = .1;			// the time in seconds between each generated segment
 		cheesyConfig.max_acc = 7.0;		// maximum acceleration for the trajectory, ft/s
@@ -115,10 +125,7 @@ public class Main {
         // FalconPathPlanner assumes absolute x,y positions on graph, whereas cheesyPoofs assume positions
         // are relative to initial robot position (i.e. cheesy position (0,0) is robot start)
         // convert cheesy Waypoints into absolute coordinates for FalconPathPlanner graphing library
-        
-        double robotOriginX = 33.0 / 12.0, robotOriginY = fieldYWidth - ((29.69 + 11) / 12.0) ; //23.0 - 0.0875 - (52.0 / 12.0);
-
-		double trackWidth = 22.0 / 12.0; //29.872 / 12.0; //(25.75/12.0);
+       
 		
 		double startTime = System.currentTimeMillis();
 
