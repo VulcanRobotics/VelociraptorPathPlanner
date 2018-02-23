@@ -109,31 +109,50 @@ public class Main {
         
         // right starting position, by portal
         double rightOriginX = 33.0 / 12.0, rightOriginY = (29.69 + 11) / 12.0;
-        double robotOriginX = leftOriginX, robotOriginY =  leftOriginY; //23.0 - 0.0875 - (52.0 / 12.0);
-       
-		TrajectoryGenerator.Config cheesyConfig = new TrajectoryGenerator.Config();
-		cheesyConfig.dt = .1;			// the time in seconds between each generated segment
-		cheesyConfig.max_acc = 7.0;		// maximum acceleration for the trajectory, ft/s
-		cheesyConfig.max_jerk = 30.0;	// maximum jerk (derivative of acceleration), ft/s
-		cheesyConfig.max_vel = 7.0;		// maximum velocity you want the robot to reach for this trajectory, ft/s
+               
 
-		WaypointSequence p = new WaypointSequence(10);
-        p.addWaypoint(new WaypointSequence.Waypoint(0.0, 0.0, 0.0));
+		WaypointSequence leftStartLeftScaleWaypoints = new WaypointSequence(10);
+        leftStartLeftScaleWaypoints.addWaypoint(new WaypointSequence.Waypoint(0.0, 0.0, 0.0));
         //p.addWaypoint(new WaypointSequence.Waypoint(12.0, -1.0, 0.0));
-        p.addWaypoint(new WaypointSequence.Waypoint(21.0, -2.5, Math.toRadians(-20.0)));
+        leftStartLeftScaleWaypoints.addWaypoint(new WaypointSequence.Waypoint(21.0, -2.5, Math.toRadians(-20.0)));
 
+        WaypointSequence rightStartRightScaleWaypoints = new WaypointSequence(10);
+        rightStartRightScaleWaypoints.addWaypoint(new WaypointSequence.Waypoint(0.0,0.0,0.0));
+        rightStartRightScaleWaypoints.addWaypoint(new WaypointSequence.Waypoint(21.0,2.5,Math.toRadians(20.0)));
+
+        WaypointSequence centerStartLeftSwitchWaypoints = new WaypointSequence(10);
+        centerStartLeftSwitchWaypoints.addWaypoint(new WaypointSequence.Waypoint(0.0,0.0,0.0));
+        centerStartLeftSwitchWaypoints.addWaypoint(new WaypointSequence.Waypoint(8.0,4.5,0.0));
+        
         // FalconPathPlanner assumes absolute x,y positions on graph, whereas cheesyPoofs assume positions
         // are relative to initial robot position (i.e. cheesy position (0,0) is robot start)
         // convert cheesy Waypoints into absolute coordinates for FalconPathPlanner graphing library
-       
-		
+       	
 		double startTime = System.currentTimeMillis();
 
         startTime = System.currentTimeMillis();
-        Path cheesyPath = PathGenerator.makePath(p, cheesyConfig,
-                trackWidth, "Left Peg");
-        System.out.println("cheesyPath calculated in " + (System.currentTimeMillis() - startTime) + "ms");
+
+        TrajectoryGenerator.Config trajConfig = new TrajectoryGenerator.Config();
+		trajConfig.dt = .1;			// the time in seconds between each generated segment
+		trajConfig.max_acc = 14.0;		// maximum acceleration for the trajectory, ft/s
+		trajConfig.max_jerk = 28.0;	// maximum jerk (derivative of acceleration), ft/s
+		trajConfig.max_vel = 7.0;		// maximum velocity you want the robot to reach for this trajectory, ft/s
+
+        Path leftStartLeftScalePath = PathGenerator.makePath(leftStartLeftScaleWaypoints, trajConfig,
+                trackWidth, "Left Start Left Scale");
+        Path rightStartRightScalePath = PathGenerator.makePath(rightStartRightScaleWaypoints, trajConfig, trackWidth, 
+        					"Right Start Right Scale");
+
+		trajConfig.max_acc = 10.0;		// maximum acceleration for the trajectory, ft/s
+		trajConfig.max_jerk = 14.0;	// maximum jerk (derivative of acceleration), ft/s
+		trajConfig.max_vel = 7.0;		// maximum velocity you want the robot to reach for this trajectory, ft/s
+
+        Path centerStartLeftSwitchPath = PathGenerator.makePath(centerStartLeftSwitchWaypoints, trajConfig, trackWidth, 
+        					"Center Start Left Switch"); 
         
+        System.out.println("Path calculated in " + (System.currentTimeMillis() - startTime) + "ms");
+        
+/*        
         TextFileSerializer tfs = new TextFileSerializer();
         String traj = tfs.serialize(cheesyPath);
 
@@ -145,103 +164,117 @@ public class Main {
         } catch (Exception e) {
         	e.printStackTrace();
         }     
+*/
 
+        // plot the paths;
+        FalconLinePlot plot = null;
+        plot = plotTrajectory(plot, leftStartLeftScalePath, leftStartLeftScaleWaypoints, leftOriginX, leftOriginY);
+        plotTrajectory(plot, rightStartRightScalePath, rightStartRightScaleWaypoints, rightOriginX, rightOriginY);
+        plotTrajectory(plot, centerStartLeftSwitchPath, centerStartLeftSwitchWaypoints, centerOriginX, centerOriginY);
 
-        // plot the generated trajectories and velocity/position profiles
-        Trajectory cheesyLeftTrajectory = cheesyPath.getLeftWheelTrajectory(),
-        		   cheesyRightTrajectory = cheesyPath.getRightWheelTrajectory();
-        
-		double[][] cheesyLeftPath = new double[cheesyLeftTrajectory.getNumSegments()][2],
-				   cheesyRightPath = new double[cheesyRightTrajectory.getNumSegments()][2],
-				   cheesyLeftVelocity = new double[cheesyLeftTrajectory.getNumSegments()][2],
-				   cheesyRightVelocity = new double[cheesyRightTrajectory.getNumSegments()][2],
-				   cheesyLeftPos = new double[cheesyLeftTrajectory.getNumSegments()][2],
-				   cheesyRightPos = new double[cheesyRightTrajectory.getNumSegments()][2];
-
-		for (int i=0; i<cheesyLeftPath.length;i++) {
-			Segment s = cheesyLeftTrajectory.getSegment(i);
-			cheesyLeftPath[i][0] = s.x + robotOriginX;
-			cheesyLeftPath[i][1] = s.y + robotOriginY;
-			if (i==0) {
-				cheesyLeftVelocity[i][0] = s.dt;
-				cheesyLeftPos[i][0] = s.dt;
-			} else {
-				cheesyLeftVelocity[i][0] = cheesyLeftVelocity[i-1][0] + s.dt;
-				cheesyLeftPos[i][0] = cheesyLeftPos[i-1][0] + s.dt;
-			}
-			cheesyLeftVelocity[i][1] = s.vel;
-			cheesyLeftPos[i][1] = s.pos;
-			System.out.print(i + ": LtPos: " + s.pos + " LtVel: " + s.vel + " LtRPM: " + 
-					(s.vel * 2173.0) * 60.0 / 1024.0 / 4.0);
-			s = cheesyRightTrajectory.getSegment(i);
-			cheesyRightPath[i][0] = s.x + robotOriginX;
-			cheesyRightPath[i][1] = s.y + robotOriginY;
-			if (i==0) {
-				cheesyRightVelocity[i][0] = s.dt;
-				cheesyRightPos[i][0] = s.dt;
-			} else {
-				cheesyRightVelocity[i][0] = cheesyRightVelocity[i-1][0] + s.dt;
-				cheesyRightPos[i][0] = cheesyRightPos[i-1][0] + s.dt;
-			}
-			cheesyRightVelocity[i][1] = s.vel;
-			cheesyRightPos[i][1] = s.pos;
-			System.out.println(" RtPos: " + s.pos + " RtVel: " + s.vel + " RtRPM: " +
-					(s.vel * 2173.0) * 60.0 / 1024.0 / 4.0);
-		}
-        
-        
-		// plot trajectory
-		FalconLinePlot cheesyFieldPlot = new FalconLinePlot(cheesyLeftPath, Color.MAGENTA, Color.MAGENTA);
-        cheesyFieldPlot.addData(cheesyRightPath, Color.MAGENTA, Color.MAGENTA);
-
-        // plot Waypoints
-        for (int i = 1; i < p.getNumWaypoints(); i++) {
-        	cheesyFieldPlot.addData(new double[][] {{p.getWaypoint(i-1).x + robotOriginX, p.getWaypoint(i-1).y + robotOriginY},
-        											{p.getWaypoint(i).x + robotOriginX, p.getWaypoint(i).y + robotOriginY}},
-        											 Color.BLACK, Color.BLACK);
-        }
-        
         // add vertical field midline
         double fieldCenterX = 27.0;
-        cheesyFieldPlot.addData(new double[][] {{fieldCenterX,0.0},{fieldCenterX,fieldYWidth}}, Color.BLACK);
+        plot.addData(new double[][] {{fieldCenterX,0.0},{fieldCenterX,fieldYWidth}}, Color.BLACK);
         
         // add portals;  x-intercepts are 3.0ft;  y are 29.69in
-        cheesyFieldPlot.addData(new double[][] {{0.0, 29.69 / 12.0}, {3.0, 0.0}}, Color.black);
-        cheesyFieldPlot.addData(new double[][] {{0.0, fieldYWidth - (29.69 / 12.0)}, 
+        plot.addData(new double[][] {{0.0, 29.69 / 12.0}, {3.0, 0.0}}, Color.black);
+        plot.addData(new double[][] {{0.0, fieldYWidth - (29.69 / 12.0)}, 
         										{3.0, fieldYWidth}}, Color.BLACK);
         
         // add autoline
-        cheesyFieldPlot.addData(new double[][] {{10.0,0.0},{10.0,fieldYWidth}},Color.BLACK);
+        plot.addData(new double[][] {{10.0,0.0},{10.0,fieldYWidth}},Color.BLACK);
 
         // add Exchange Zone
-        cheesyFieldPlot.addData(exchangeZoneLines, Color.BLUE);
+        plot.addData(exchangeZoneLines, Color.BLUE);
         
         // add switch
-        cheesyFieldPlot.addData(switchTopPlate, Color.RED);
-        cheesyFieldPlot.addData(switchBottomPlate, Color.BLUE);
-        cheesyFieldPlot.addData(switchFence, Color.BLACK);
+        plot.addData(switchTopPlate, Color.RED);
+        plot.addData(switchBottomPlate, Color.BLUE);
+        plot.addData(switchFence, Color.BLACK);
         
         // add power cube zone
-        cheesyFieldPlot.addData(powerCubeZone, Color.BLACK);
+        plot.addData(powerCubeZone, Color.BLACK);
         
         // add scale plates
-        cheesyFieldPlot.addData(scaleTopPlate, Color.BLUE);
-        cheesyFieldPlot.addData(scaleBottomPlate, Color.RED);
+        plot.addData(scaleTopPlate, Color.BLUE);
+        plot.addData(scaleBottomPlate, Color.RED);
                               
-        cheesyFieldPlot.xGridOn();
-		cheesyFieldPlot.yGridOn();
-		cheesyFieldPlot.setXTic(0, fieldXLength, 1);
-		cheesyFieldPlot.setYTic(0, fieldYWidth, 1);
+        plot.xGridOn();
+		plot.yGridOn();
+		plot.setXTic(0, fieldXLength, 1);
+		plot.setYTic(0, fieldYWidth, 1);       
+	}        
 
-		FalconLinePlot cheesyMotorPlot = new FalconLinePlot(cheesyLeftVelocity, Color.RED, Color.RED);
-		cheesyMotorPlot.addData(cheesyRightVelocity, Color.GREEN, Color.GREEN);
-		cheesyMotorPlot.addData(cheesyLeftPos, Color.PINK, Color.PINK);
-		cheesyMotorPlot.addData(cheesyRightPos, Color.CYAN, Color.CYAN);
-		cheesyMotorPlot.xGridOn();
-		cheesyMotorPlot.yGridOn();
+
+	public static FalconLinePlot plotTrajectory(FalconLinePlot plot, Path p, WaypointSequence ws, double robotOriginX, double robotOriginY) {
+		// plot the generated trajectories and velocity/position profiles
+        Trajectory leftWheelTraj = p.getLeftWheelTrajectory(),
+        		   rightWheelTraj = p.getRightWheelTrajectory();
+        
+		double[][] leftData = new double[leftWheelTraj.getNumSegments()][2],
+				   rightData = new double[rightWheelTraj.getNumSegments()][2],
+				   leftVel = new double[leftWheelTraj.getNumSegments()][2],
+				   rightVel = new double[rightWheelTraj.getNumSegments()][2],
+				   leftPos = new double[leftWheelTraj.getNumSegments()][2],
+				   rightPos = new double[rightWheelTraj.getNumSegments()][2];
+
+		for (int i=0; i<leftData.length;i++) {
+			Segment s = leftWheelTraj.getSegment(i);
+			leftData[i][0] = s.x + robotOriginX;
+			leftData[i][1] = s.y + robotOriginY;
+			if (i==0) {
+				leftVel[i][0] = s.dt;
+				leftPos[i][0] = s.dt;
+			} else {
+				leftVel[i][0] = leftVel[i-1][0] + s.dt;
+				leftPos[i][0] = leftPos[i-1][0] + s.dt;
+			}
+			leftVel[i][1] = s.vel;
+			leftPos[i][1] = s.pos;
+
+			s = rightWheelTraj.getSegment(i);
+			rightData[i][0] = s.x + robotOriginX;
+			rightData[i][1] = s.y + robotOriginY;
+			if (i==0) {
+				rightVel[i][0] = s.dt;
+				rightPos[i][0] = s.dt;
+			} else {
+				rightVel[i][0] = rightVel[i-1][0] + s.dt;
+				rightPos[i][0] = rightPos[i-1][0] + s.dt;
+			}
+			rightVel[i][1] = s.vel;
+			rightPos[i][1] = s.pos;
+		}
+        
+        
+		// plot trajectory on field window if it exists, or create new one if not
+		if (plot == null) {
+			plot = new FalconLinePlot(leftData, Color.MAGENTA, Color.MAGENTA);
+			plot.addData(rightData, Color.MAGENTA, Color.MAGENTA);
+		} else {
+			plot.addData(leftData, Color.MAGENTA, Color.MAGENTA);
+			plot.addData(rightData, Color.magenta, Color.MAGENTA);
+		}
 		
-
-		System.out.println(" cheesyPath points: " + cheesyPath.getLeftWheelTrajectory().getNumSegments());
+        // plot Waypoints on field
+        for (int i = 1; i < ws.getNumWaypoints(); i++) {
+        	plot.addData(new double[][] {{ws.getWaypoint(i-1).x + robotOriginX, ws.getWaypoint(i-1).y + robotOriginY},
+        											{ws.getWaypoint(i).x + robotOriginX, ws.getWaypoint(i).y + robotOriginY}},
+        											 Color.BLACK, Color.BLACK);
+        }
+		
+        // create a new window for the motor position & velocity curves
+        FalconLinePlot motorPlot = new FalconLinePlot(leftVel, Color.RED, Color.RED);
+		motorPlot.addData(rightVel, Color.GREEN, Color.GREEN);
+		motorPlot.addData(leftPos, Color.PINK, Color.PINK);
+		motorPlot.addData(rightPos, Color.CYAN, Color.CYAN);
+		motorPlot.xGridOn();
+		motorPlot.yGridOn();
+		motorPlot.setTitle(p.getName() + " - Velocity & Position - " + rightVel.length + " pts\n" + "LVel = Red, RVel = Green, LPos = Pink, RPos = Cyan");
+		motorPlot.setYLabel("Ft / Ft per sec");
+		motorPlot.setXLabel("Time (sec)");
+		return plot;
 	}
+        
 
 }
