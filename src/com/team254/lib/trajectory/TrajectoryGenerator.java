@@ -157,6 +157,7 @@ public class TrajectoryGenerator {
               / config.max_jerk) / config.dt);
       double impulse = (goal_pos / adjusted_max_vel) / config.dt;
       int time = (int) (Math.ceil(f1_length + f2_length + impulse));
+      System.out.println("time:" + config.dt);
       traj = secondOrderFilter(f1_length, f2_length, config.dt, 0,
               adjusted_max_vel, impulse, time, TrapezoidalIntegration);
 
