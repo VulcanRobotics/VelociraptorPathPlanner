@@ -121,8 +121,8 @@ public class Main {
 		
 		TrajectoryGenerator.Config trajCurveConfig = new TrajectoryGenerator.Config();
 		trajCurveConfig.dt = .1;			// the time in seconds between each generated segment
-		trajCurveConfig.max_acc = 7.0;		// maximum acceleration for the trajectory, ft/s
-		trajCurveConfig.max_jerk = 7.0;	// maximum jerk (derivative of acceleration), ft/s
+		trajCurveConfig.max_acc = 3.5;		// maximum acceleration for the trajectory, ft/s
+		trajCurveConfig.max_jerk = 3.5;	// maximum jerk (derivative of acceleration), ft/s
 		trajCurveConfig.max_vel = 3.5;// maximum velocity you want the robot to reach for this trajectory, ft/s
 
 		/*WaypointSequence leftStartLeftScaleWaypoints = new WaypointSequence(10);
@@ -133,11 +133,10 @@ public class Main {
         LinkedWaypointSequences leftStartLeftScaleWaypoints = new LinkedWaypointSequences();
         WaypointSequence strightLine = new WaypointSequence(10);
         strightLine.addWaypoint(new WaypointSequence.Waypoint(0.0,0.0,0.0));
-        strightLine.addWaypoint(new WaypointSequence.Waypoint(9,0.0,0.0));
-        leftStartLeftScaleWaypoints.addTrajectories(strightLine, trajConfig, 3.5);
+        strightLine.addWaypoint(new WaypointSequence.Waypoint(12.5,0.0,0.0));
+        leftStartLeftScaleWaypoints.addTrajectories(strightLine, trajConfig, 4.2);
         
         WaypointSequence curve = new WaypointSequence(10);
-        curve.addWaypoint(new WaypointSequence.Waypoint(9.0,0.0,0.0));
         curve.addWaypoint(new WaypointSequence.Waypoint(12.5,0.0,0.0));
         curve.addWaypoint(new WaypointSequence.Waypoint(19,-4,Math.toRadians(-45.0)));
         leftStartLeftScaleWaypoints.addTrajectories(curve, trajCurveConfig, 0);

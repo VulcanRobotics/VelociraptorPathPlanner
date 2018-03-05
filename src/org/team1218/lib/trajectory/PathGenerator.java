@@ -24,8 +24,19 @@ public class PathGenerator extends com.team254.lib.trajectory.PathGenerator {
 				endSpeed = path.criticalSpeeds.get(i);
 			}
 			System.out.println(i);
-			traj.append(generateFromPath(path.waypointSequences.get(i),path.configs.get(i),startSpeed,endSpeed));
+			Trajectory trajPart = generateFromPath(path.waypointSequences.get(i),path.configs.get(i),startSpeed,endSpeed);
+			Trajectory.Segment[] segments = new Trajectory.Segment[trajPart.getNumSegments()];
+			for(int j = 0; j < trajPart.getNumSegments(); j++) {
+				segments[j] = trajPart.getSegment(j);
+			}
+			//segments[trajPart.getNumSegments()-1].vel = endSpeed;
+			System.out.println("startPos:" + segments[0].pos + " endPos:" + segments[trajPart.getNumSegments()-1].pos);
+			for(int j = 0; j < trajPart.getNumSegments(); j++) {
+				System.out.println("vel:" + segments[j].vel);
+			}
+			traj.append(new Trajectory(segments));
 		}
+		System.out.println();
 		return traj;
 		
 	}
@@ -55,7 +66,7 @@ public class PathGenerator extends com.team254.lib.trajectory.PathGenerator {
 
 		    // Generate a smooth trajectory over the total distance.
 		    Trajectory traj = TrajectoryGenerator.generate(config,
-		            TrajectoryGenerator.AutomaticStrategy,startSpeed, path.getWaypoint(0).theta,
+		            TrajectoryGenerator.TrapezoidalStrategy,startSpeed, path.getWaypoint(0).theta,
 		            total_distance, endSpeed, path.getWaypoint(path.getNumWaypoints()-1).theta);
 
 		    // Assign headings based on the splines.
