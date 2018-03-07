@@ -2,6 +2,7 @@ package org.team1218.lib.trajectory;
 
 import com.team254.lib.trajectory.Path;
 import com.team254.lib.trajectory.Trajectory;
+import com.team254.lib.trajectory.Trajectory.Segment;
 import com.team254.lib.trajectory.TrajectoryGenerator;
 import com.team254.lib.trajectory.WaypointSequence;
 
@@ -24,15 +25,10 @@ public class PathGenerator extends com.team254.lib.trajectory.PathGenerator {
 				endSpeed = path.criticalSpeeds.get(i);
 			}
 			System.out.println(i);
-			Trajectory trajPart = generateFromPath(path.waypointSequences.get(i),path.configs.get(i),startSpeed,endSpeed);
+			Trajectory trajPart = generateFromPath(path.waypointSequences.get(i),path.configs.get(i),startSpeed,endSpeed,i>=path.waypointSequences.size()-1);
 			Trajectory.Segment[] segments = new Trajectory.Segment[trajPart.getNumSegments()];
 			for(int j = 0; j < trajPart.getNumSegments(); j++) {
 				segments[j] = trajPart.getSegment(j);
-			}
-			//segments[trajPart.getNumSegments()-1].vel = endSpeed;
-			System.out.println("startPos:" + segments[0].pos + " endPos:" + segments[trajPart.getNumSegments()-1].pos);
-			for(int j = 0; j < trajPart.getNumSegments(); j++) {
-				System.out.println("vel:" + segments[j].vel);
 			}
 			traj.append(new Trajectory(segments));
 		}
@@ -44,7 +40,8 @@ public class PathGenerator extends com.team254.lib.trajectory.PathGenerator {
 	public static Trajectory generateFromPath(	WaypointSequence path,
 		          								TrajectoryGenerator.Config config,
 		          								double startSpeed,
-		          								double endSpeed) {
+		          								double endSpeed,
+		          								boolean last) {
 		    if (path.getNumWaypoints() < 2) {
 		      return null;
 		    }
@@ -62,12 +59,20 @@ public class PathGenerator extends com.team254.lib.trajectory.PathGenerator {
 		      }
 		      spline_lengths[i] = splines[i].calculateLength();
 		      total_distance += spline_lengths[i];
+		      System.out.println("length:" + total_distance);
 		    }
 
 		    // Generate a smooth trajectory over the total distance.
 		    Trajectory traj = TrajectoryGenerator.generate(config,
 		            TrajectoryGenerator.TrapezoidalStrategy,startSpeed, path.getWaypoint(0).theta,
 		            total_distance, endSpeed, path.getWaypoint(path.getNumWaypoints()-1).theta);
+		    if(last != true) {
+		    	Segment lastSeg = traj.getSegment(traj.getNumSegments()-1);
+		    	lastSeg.x = path.getWaypoint(path.getNumWaypoints()-1).x - path.getWaypoint(0).x;
+		    	lastSeg.y = path.getWaypoint(path.getNumWaypoints()-1).y - path.getWaypoint(0).y;
+		    	lastSeg.pos = total_distance;
+		    	lastSeg.vel = endSpeed;
+		    }
 
 		    // Assign headings based on the splines.
 		    int cur_spline = 0;
