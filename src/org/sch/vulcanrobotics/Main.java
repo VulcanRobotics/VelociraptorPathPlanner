@@ -113,12 +113,12 @@ public class Main {
 
 		WaypointSequence leftStartLeftScaleWaypoints = new WaypointSequence(10);
         leftStartLeftScaleWaypoints.addWaypoint(new WaypointSequence.Waypoint(0.0, 0.0, 0.0));
-        //p.addWaypoint(new WaypointSequence.Waypoint(12.0, -1.0, 0.0));
-        leftStartLeftScaleWaypoints.addWaypoint(new WaypointSequence.Waypoint(21.0, -2.5, Math.toRadians(-20.0)));
+        leftStartLeftScaleWaypoints.addWaypoint(new WaypointSequence.Waypoint(9, -3, Math.toRadians(-45)));
 
         WaypointSequence rightStartRightScaleWaypoints = new WaypointSequence(10);
         rightStartRightScaleWaypoints.addWaypoint(new WaypointSequence.Waypoint(0.0,0.0,0.0));
-        rightStartRightScaleWaypoints.addWaypoint(new WaypointSequence.Waypoint(21.0,2.5,Math.toRadians(20.0)));
+        rightStartRightScaleWaypoints.addWaypoint(new WaypointSequence.Waypoint(7, 0,0));
+        rightStartRightScaleWaypoints.addWaypoint(new WaypointSequence.Waypoint(21.0,15,Math.toRadians(45)));
 
         WaypointSequence centerStartLeftSwitchWaypoints = new WaypointSequence(10);
         centerStartLeftSwitchWaypoints.addWaypoint(new WaypointSequence.Waypoint(0.0,0.0,0.0));
@@ -136,7 +136,7 @@ public class Main {
 		trajConfig.dt = .1;			// the time in seconds between each generated segment
 		trajConfig.max_acc = 14.0;		// maximum acceleration for the trajectory, ft/s
 		trajConfig.max_jerk = 28.0;	// maximum jerk (derivative of acceleration), ft/s
-		trajConfig.max_vel = 7.0;		// maximum velocity you want the robot to reach for this trajectory, ft/s
+		trajConfig.max_vel = 6.5;		// maximum velocity you want the robot to reach for this trajectory, ft/s
 
         Path leftStartLeftScalePath = PathGenerator.makePath(leftStartLeftScaleWaypoints, trajConfig,
                 trackWidth, "Left Start Left Scale");
