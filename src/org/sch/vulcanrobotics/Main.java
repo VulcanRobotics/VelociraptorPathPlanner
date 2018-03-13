@@ -8,6 +8,8 @@ import org.team1218.lib.trajectory.LinkedWaypointSequences;
 
 import com.team254.lib.trajectory.Path;
 import org.team1218.lib.trajectory.PathGenerator;
+import org.team1218.lib.trajectory.TurnGenerator;
+
 import com.team254.lib.trajectory.Trajectory;
 import com.team254.lib.trajectory.TrajectoryGenerator;
 import com.team254.lib.trajectory.WaypointSequence;
@@ -121,9 +123,9 @@ public class Main {
 		
 		TrajectoryGenerator.Config trajCurveConfig = new TrajectoryGenerator.Config();
 		trajCurveConfig.dt = .1;			// the time in seconds between each generated segment
-		trajCurveConfig.max_acc = 5.5;		// maximum acceleration for the trajectory, ft/s
-		trajCurveConfig.max_jerk = 3.5;	// maximum jerk (derivative of acceleration), ft/s
-		trajCurveConfig.max_vel = 3.5;// maximum velocity you want the robot to reach for this trajectory, ft/s
+		trajCurveConfig.max_acc = 7;		// maximum acceleration for the trajectory, ft/s
+		trajCurveConfig.max_jerk = 7;	// maximum jerk (derivative of acceleration), ft/s
+		trajCurveConfig.max_vel = 5.75;// maximum velocity you want the robot to reach for this trajectory, ft/s
 
 		/*WaypointSequence leftStartLeftScaleWaypoints = new WaypointSequence(10);
         leftStartLeftScaleWaypoints.addWaypoint(new WaypointSequence.Waypoint(0.0, 0.0, 0.0));
@@ -143,7 +145,8 @@ public class Main {
 
         WaypointSequence rightStartRightScaleWaypoints = new WaypointSequence(10);
         rightStartRightScaleWaypoints.addWaypoint(new WaypointSequence.Waypoint(0.0,0.0,0.0));
-        rightStartRightScaleWaypoints.addWaypoint(new WaypointSequence.Waypoint(21.0,4.5,Math.toRadians(20.0)));
+        rightStartRightScaleWaypoints.addWaypoint(new WaypointSequence.Waypoint(6, 0, 0));
+        rightStartRightScaleWaypoints.addWaypoint(new WaypointSequence.Waypoint(17.83,16,Math.toRadians(89.0)));
 
         WaypointSequence centerStartLeftSwitchWaypoints = new WaypointSequence(10);
         centerStartLeftSwitchWaypoints.addWaypoint(new WaypointSequence.Waypoint(0.0,0.0,0.0));
@@ -160,7 +163,7 @@ public class Main {
 
         Path leftStartLeftScalePath = PathGenerator.makeLinkedPath(leftStartLeftScaleWaypoints,
                 trackWidth, "Left Start Left Scale");
-        Path rightStartRightScalePath = PathGenerator.makePath(rightStartRightScaleWaypoints, trajConfig, trackWidth, 
+        Path rightStartRightScalePath = PathGenerator.makePath(rightStartRightScaleWaypoints, trajCurveConfig, trackWidth, 
         					"Right Start Right Scale");
 
 		trajConfig.max_acc = 10.0;		// maximum acceleration for the trajectory, ft/s
@@ -189,8 +192,13 @@ public class Main {
         // plot the paths;
         FalconLinePlot plot = null;
         plot = plotTrajectory(plot, leftStartLeftScalePath, rightStartRightScaleWaypoints, leftOriginX, leftOriginY);
-        //plotTrajectory(plot, rightStartRightScalePath, rightStartRightScaleWaypoints, rightOriginX, rightOriginY);
-        //plotTrajectory(plot, centerStartLeftSwitchPath, centerStartLeftSwitchWaypoints, centerOriginX, centerOriginY);
+        trajConfig.max_acc = 14.0;		// maximum acceleration for the trajectory, ft/s
+		trajConfig.max_jerk = 7.0;	// maximum jerk (derivative of acceleration), ft/s
+		trajConfig.max_vel = 7.0; // maximum velocity you want the robot to reach for this trajectory, ft/s
+		trajConfig.dt = 0.1;
+        plotTrajectory(plot,TurnGenerator.generateTurn(Math.PI/2,trajConfig,2),rightStartRightScaleWaypoints,0,0);
+        plotTrajectory(plot, rightStartRightScalePath, rightStartRightScaleWaypoints, rightOriginX, rightOriginY);
+        plotTrajectory(plot, centerStartLeftSwitchPath, centerStartLeftSwitchWaypoints, centerOriginX, centerOriginY);
 
         // add vertical field midline
         double fieldCenterX = 27.0;
@@ -222,7 +230,7 @@ public class Main {
         plot.xGridOn();
 		plot.yGridOn();
 		plot.setXTic(0, fieldXLength, 1);
-		plot.setYTic(0, fieldYWidth, 1);       
+		plot.setYTic(0, fieldYWidth, 1);   
 	}        
 
 
